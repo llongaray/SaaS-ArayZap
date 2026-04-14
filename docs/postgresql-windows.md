@@ -76,3 +76,19 @@ python manage.py migrate
 ```
 
 (Este passo não é executado automaticamente pelo assistente; rode na sua máquina quando o banco estiver pronto.)
+
+## 7. Erro: permissão negada para tabela `django_migrations`
+
+Isso ocorre quando o `migrate` rodou com o usuário **`postgres`**, mas o `.env` usa **`arayzap_user`**: as tabelas ficam com dono `postgres` e o app não consegue usar `django_migrations`.
+
+`REASSIGN OWNED BY postgres` pode falhar no PostgreSQL recente (“objetos requeridos pelo sistema”). Use **GRANT** no schema `public`:
+
+Execute o script [scripts/fix_arayzap_db_privileges.sql](../scripts/fix_arayzap_db_privileges.sql) ou, como **postgres** no banco **`arayzap`**:
+
+```powershell
+$env:PGPASSWORD = 'SENHA_DO_POSTGRES'
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -h localhost -d arayzap -f scripts/fix_arayzap_db_privileges.sql
+Remove-Item Env:PGPASSWORD
+```
+
+Depois rode de novo `python manage.py runserver` ou `makemigrations`.
